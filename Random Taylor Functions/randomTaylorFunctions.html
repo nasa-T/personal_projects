@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Taylor Functions</title>
+    <style>
+        #canvas { background-color: lightblue; position: absolute; }
+        #canvas2 { background-color: transparent; position: relative; }
+        #degree, #function { position: relative; display: inline; margin-right: 1.5em; }
+    </style>
+</head>
+<body>
+<header>Taylor Functions</header>
+<main>
+    <canvas id="canvas" height="500" width="500"></canvas>
+    <canvas id="canvas2" height="500" width="500"></canvas>
+    <div id="degree">
+    </div>
+    <div id="function">
+    </div>
+    <div>
+        <button id="toggleRun" type="button" onclick="toggleRun(this)">
+            Pause
+        </button>
+    </div>
+</main>
+    <script src="randomTaylorFunctionsInitial.js"></script>
+    <script src="randomTaylorFunctionsGenerator.js"></script>
+    <script src="randomTaylorFunctions.js"></script>
+</body>
+</html>

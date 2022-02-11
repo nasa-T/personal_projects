@@ -1,0 +1,22 @@
+﻿var canvas = document.getElementById("canvas");
+var ctx = canvas.getContext("2d");
+var canvas2 = document.getElementById("canvas2");
+var ctx2 = canvas2.getContext("2d");
+var graph = document.getElementById("graph");
+var con = graph.getContext("2d");
+var graph2 = document.getElementById("graph2");
+var con2 = graph2.getContext("2d");
+
+const dt = 0.001;
+const SCALE_TIME = 1;
+const PI = Math.PI;
+const PLOT_SIZE = 1;
+const N_B = 250;
+const N_I = 5;
+const LENGTH = 100;
+const HEIGHT = 50;
+const SPEED = 75;
+var ACHOO = 0; //Active Contagion Horizon of Operation
+var t = 0;
+const TIME_FATE = 336;
+const FATE_DECIDER = 50; //percentage

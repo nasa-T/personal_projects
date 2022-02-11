@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Lens</title>
+    <style>
+        canvas { background-color: lightblue; }
+    </style>
+</head>
+<body>
+<header>Le Lens</header>
+<main>
+    <canvas id="canvas" height="500" width="500"></canvas>
+</main>
+<script>
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+    const LENS_LENGTH = 300;
+    const R = LENS_LENGTH / 2;
+    const SCALE = 1;
+    const PI = Math.PI;
+    const N1 = 1.5;
+    const N2 = 1;
+    var density = LENS_LENGTH / 30;
+    var start = -LENS_LENGTH / 3;
+    var stop = LENS_LENGTH / 3;
+    var lens = [];
+
+    lens[0] = {
+        x: -canvas.width / 2,
+        y: 0
+    }
+
+    function resetCanvas() {
+        canvas.width = canvas.width;
+        ctx.transform(SCALE, 0, 0, -SCALE, canvas.width / 2, canvas.height / 2);
+        ctx.lineWidth = 1 / SCALE;
+    }
+
+    function drawLens() {
+        ctx.beginPath();
+        ctx.arc(lens[0].x, lens[0].y, R, -PI / 4, PI / 4);
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    function light(y) {
+        endX = Math.sqrt(Math.pow(R, 2) - Math.pow(y, 2)) + lens[0].x
+        ctx.beginPath();
+        ctx.moveTo(-canvas.width, y);
+        ctx.lineTo(endX, y);
+        ctx.strokeStyle = "blue";
+        ctx.stroke();
+    }
+
+    function drawLight() {
+        var y
+        for (y = start; y <= stop; y = y + density) {
+            light(y);
+        }
+    }
+
+    function bend() {
+        for (var y = start; y <= stop; y = y + density) {
+            endX = Math.sqrt(Math.pow(R, 2) - Math.pow(y, 2)) + lens[0].x
+            rSlope = y / (endX - lens[0].x);
+            var tan2 = Math.pow(Math.pow((R * N2) / (N1 * y), 2) - 1, -1 / 2) * Math.sign(rSlope);
+            var slope = -(tan2 - rSlope) / (1 + rSlope * tan2);
+            var dy = slope * (canvas.width);
+            var dx = canvas.width;
+            ctx.beginPath();
+            ctx.moveTo(endX, y);
+            ctx.lineTo(endX + dx, y + dy);
+            ctx.strokeStyle = "red";
+            ctx.stroke();
+        }
+    }
+
+    function allOfExistence() {
+        resetCanvas();
+        drawLens();
+        bend();
+        drawLight(density, start, stop);
+    }
+    allOfExistence();
+</script>
+</body>
+</html>

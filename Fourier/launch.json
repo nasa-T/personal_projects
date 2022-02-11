@@ -1,0 +1,11 @@
+{
+	"version": "0.1.0",
+	"configurations": [
+		{
+			"name": "Launch Fourier",
+			"type": "chrome",
+			"request": "launch",
+			"file": "${workspaceFolder}/fourier.html"
+		},
+	]
+}

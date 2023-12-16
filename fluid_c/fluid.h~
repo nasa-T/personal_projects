@@ -1,0 +1,68 @@
+#include <cmath>
+#include <iostream>
+
+namespace consts {
+    const float HMol = 2.408e-3;
+    const float HeMol = 4e-3;
+    const float kb = 1.380649e-23;
+    const float Na = 6.02214076e23;
+    const float R = kb*Na;
+
+    const double EARTH_ORBIT = 1.5e11;
+    const double EARTH_MASS = 6e24;
+    const double SUN_MASS = 2e30;
+    // const double G = 6.67e-11;
+    const double G = 6.67e-2;
+    const double PI = M_PI;
+    // const double GRID_WIDTH = 1.4E9;
+    // const double GRID_HEIGHT = 1.4E9;
+    const double GRID_WIDTH = 10000000;
+    const double GRID_HEIGHT = 10000000;
+    const float dt = 0.01;
+    const int N_ROWS = 20;
+    const int N_COLS = 20;
+    const float delta_x = GRID_WIDTH / N_COLS;
+    const float delta_y = GRID_HEIGHT / N_ROWS;
+
+    // const float N_TAIL = 100;
+    const float YEAR = 365.24 * 24 * 60 * 60;
+    const float SCALE_TIME = 1;
+}
+
+class VelocityVector {
+    public:
+        VelocityVector(float vx_ = 0, float vy_ = 0, float ax_ = 0, float ay_ = 0): vx(vx_), vy(vy_), ax(ax_), ay(ay_) {}
+        VelocityVector operator+(VelocityVector& other) {
+            VelocityVector added(this->vx + other.vx, this->vy + other.vy, other.ax, other.ay);
+            return added;
+        }
+        float getVx() {
+            return vx;
+        }
+        float getVy() {
+            return vy;
+        }
+        float getAx() {
+            return ax;
+        }
+        float getAy() {
+            return ay;
+        }
+        void setVx(float v) {
+            vx = v;
+        }
+        void setVy(float v) {
+            vy = v;
+        }
+        void accelerate() {
+            vx += ax * consts::dt;
+            vy += ay * consts::dt;
+        }
+        
+    private:
+        float vx, vy, ax, ay;
+};
+
+std::ostream& operator<<(std::ostream &s, VelocityVector &vec) {
+    return s << "vx: " << vec.getVx() << " vy: " << vec.getVy();
+}

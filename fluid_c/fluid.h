@@ -16,8 +16,8 @@ namespace consts {
     const double PI = M_PI;
     // const double GRID_WIDTH = 1.4E9;
     // const double GRID_HEIGHT = 1.4E9;
-    const double GRID_WIDTH = 100;
-    const double GRID_HEIGHT = 100;
+    const int GRID_WIDTH = 800;
+    const int GRID_HEIGHT = 800;
     const float dt = 0.01;
     const int N_ROWS = 100;
     const int N_COLS = 100;
@@ -29,54 +29,10 @@ namespace consts {
     const float SCALE_TIME = 1;
 }
 
-class VelocityVector {
-    public:
-        VelocityVector(float vx_ = 0, float vy_ = 0, float ax_ = 0, float ay_ = 0): vx(vx_), vy(vy_), ax(ax_), ay(ay_) {}
-        VelocityVector operator+(VelocityVector& other) {
-            VelocityVector added(this->vx + other.vx, this->vy + other.vy, other.ax, other.ay);
-            return added;
-        }
-        float getVx() {
-            return vx;
-        }
-        float getVy() {
-            return vy;
-        }
-        float getAx() {
-            return ax;
-        }
-        float getAy() {
-            return ay;
-        }
-        void setVx(float v) {
-            vx = v;
-        }
-        void setVy(float v) {
-            vy = v;
-        }
-        void accelerate() {
-            vx += ax * consts::dt;
-            vy += ay * consts::dt;
-        }
-        
-    private:
-        float vx, vy, ax, ay;
-};
+class Neighbors;
+class VelocityVector;
+class FluidCell;
+class FluidGrid;
+class Simulator;
 
-class FluidCell {
-public:
-  FluidCell(float _mass, float _size, float _temp) mass(_mass), size(_size), temperature(_temp) {
-    // size is the physical side length
-    density = mass/pow(size,2);
-    pressure = density/mass * consts::kb * temperature;
-    vel = VelocityVector();
-  }
 
-private:
-  float mass, size, density, temperature, pressure;
-  VelocityVector vel;
-};
-
-std::ostream& operator<<(std::ostream &s, VelocityVector &vec) {
-    return s << "vx: " << vec.getVx() << " vy: " << vec.getVy();
-}

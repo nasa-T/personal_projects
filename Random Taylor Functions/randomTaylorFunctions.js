@@ -132,5 +132,5 @@ function allOfExistence() {
     }
 }
 
-var intervalId = setInterval(allOfExistence, 1000 * dt);
+var intervalId = setInterval(allOfExistence, 400 * dt);
 document.getElementById("toggleRun").innerHTML = "Pause";

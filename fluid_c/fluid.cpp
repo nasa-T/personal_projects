@@ -4,6 +4,8 @@
 #include <SDL2/SDL.h>
 #include "sample.cpp"
 #include <cstdlib>
+#include <map>
+#include <string>
 
 class VelocityVector {
     public:
@@ -41,13 +43,13 @@ class VelocityVector {
 
 class Neighbors {
     public:
+        FluidCell *top, *bottom, *left, *right;
         Neighbors() {
             top = NULL;
             bottom = NULL;
             left  = NULL;
             right = NULL;
         }
-    FluidCell *top, *bottom, *left, *right;
 };
 
 
@@ -79,9 +81,45 @@ class FluidCell {
         void setMass(float m) {
             if (m >= 0) mass = m;
         }
+        FluidCell *getRight() {
+            return neighbors.right;
+        }
+        FluidCell *getLeft() {
+            return neighbors.left;
+        }
+        FluidCell *getTop() {
+            return neighbors.top;
+        }
+        FluidCell *getBottom() {
+            return neighbors.bottom;
+        }
+        void setRight(FluidCell *neighbor) {
+            neighbors.right = neighbor;
+        }
+        void setLeft(FluidCell *neighbor) {
+            neighbors.left = neighbor;
+        }
+        void setTop(FluidCell *neighbor) {
+            neighbors.top = neighbor;
+        }
+        void setBottom(FluidCell *neighbor) {
+            neighbors.bottom = neighbor;
+        }
         void transferMass(FluidCell *other, float m) {
-            float otherMass = other->getMass();
-            other->setMass(otherMass + m);
+            if (other != NULL) { // halt at the boundaries; NOTHING GETS OUT
+                if (this->getMass() < m) {
+                    m = this->getMass();
+                }
+                float otherMass = other->getMass();
+                other->setMass(otherMass + m);
+                this->setMass(mass - m);
+            }
+        }
+        void addVelocity(VelocityVector vel2) {
+            vel += vel2;
+        }
+        void setVelocity(VelocityVector vel2) {
+            vel = vel2;
         }
 
     private:
@@ -105,6 +143,14 @@ class FluidGrid {
                     //random mass for now
                     float mass = std::rand() % 256;
                     grid[i][j] = FluidCell(mass, cellWidth, cellHeight, 100);
+                    if (i != 0) {
+                        grid[i][j].setTop(&grid[i - 1][j]);
+                        grid[i - 1][j].setBottom(&grid[i][j]);
+                    }
+                    if (j != 0) {
+                        grid[i][j].setLeft(&grid[i][j - 1]);
+                        grid[i][j - 1].setRight(&grid[i][j]);
+                    }
                 }
             }
         }
@@ -122,15 +168,18 @@ class FluidGrid {
 
         void update() {
             int i, j;
+            float totalMass = 0;
             for (i = 0; i < rows; i++) {
                 for (j = 0; j < cols; j++) {
                     //random mass for now
                     FluidCell *cell = getCell(i, j);
-                    cell->setMass(cell->getMass()-5);
+                    cell->transferMass(cell->getRight(), 5);
+                    cell->transferMass(cell->getBottom(), 5);
+                    totalMass += cell->getMass();
+                    // cell->setMass(cell->getMass()-5);
                 }
             }
         }
-
     private:
         float width, height;
         float cellWidth, cellHeight;
@@ -172,6 +221,9 @@ class Simulator {
                 for (j = 0; j < cols; j++) {
                     float mass = grid->getCell(i,j)->getMass();
                     SDL_Rect rect{j*consts::GRID_WIDTH/cols,i*consts::GRID_HEIGHT/rows,(j+1)*consts::GRID_WIDTH/cols,(i+1)*consts::GRID_HEIGHT/rows};
+                    if (mass > 255) {
+                        mass = 255;
+                    }
                     SDL_SetRenderDrawColor(renderer, mass, mass, 0, 255);
                     SDL_RenderFillRect(renderer, &rect);
                 }

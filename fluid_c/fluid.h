@@ -31,6 +31,8 @@ namespace consts {
 
 class Neighbors;
 class VelocityVector;
+class VelocityBox;
+class VelocityGrid;
 class FluidCell;
 class FluidGrid;
 class Simulator;

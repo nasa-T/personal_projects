@@ -37,11 +37,58 @@ class VelocityVector {
             vx += ax * consts::dt;
             vy += ay * consts::dt;
         }
+        float getMag() {
+            return pow(vx*vx+vy*vy,1/2);
+        }
         // std::ostream& operator<<(std::ostream &s, VelocityVector &vec) {
         //     return s << "vx: " << vec.getVx() << " vy: " << vec.getVy();
         // }
     private:
         float vx, vy, ax, ay;
+};
+
+class VelocityBox {
+    public:
+        float top, bottom, left, right;
+        VelocityBox(float top = 0, float bottom = 0, float left = 0, float right = 0): top(top), bottom(bottom), left(left), right(right) {}
+        void setVelocity(VelocityVector v) {
+            left = v.getVx();
+            right = v.getVx();
+            top = v.getVy();
+            bottom = v.getVy();
+        }
+};
+
+class VelocityGrid {
+    public:
+        VelocityGrid(int rows, int cols): rows(rows), cols(cols) {
+            int i, j;
+            vyArray = (float **) malloc(sizeof(float *) * (rows + 1));
+            vxArray = (float **) malloc(sizeof(float *) * rows);
+            for (i = 0; i < rows + 1; i++) {
+                vyArray[i] = (float *) malloc(sizeof(float) * cols);
+                for (j = 0; j < cols; j++) {
+                    vyArray[i][j] = 0;
+                }
+            }
+            for (i = 0; i < rows; i++) {
+                vxArray[i] = (float *) malloc(sizeof(float) * (cols + 1));
+                for (j = 0; j < cols + 1; j++) {
+                    vxArray[i][j] = 0;
+                }
+            }
+        }
+
+        VelocityBox getVelocityBox(int i, int j) {
+            return VelocityBox(vyArray[i][j], vyArray[i+1][j], vxArray[i][j], vxArray[i][j+1]);
+        }
+
+        VelocityVector getVelocityVector(int i, int j) {
+            return VelocityVector(vxArray[i][j], vyArray[i][j]);
+        }
+    private:
+        int rows, cols;
+        float **vyArray, **vxArray;
 };
 
 class Neighbors {
@@ -63,10 +110,15 @@ class FluidCell {
             size = width * height;
             density = mass/size;
             pressure = density/mass * consts::kb * temperature;
-            vel = VelocityVector();
+            velocity = VelocityVector();
+            // velocity.setVx(1);
+            // velocity.setVx((std::rand() % (int)(2*width)) - width/2);
+            // velocity.setVy((std::rand() % (int)(2*height)) - height/2);
+            vBounds = VelocityBox(0,0,0,0);
+            vBounds.setVelocity(velocity);
             neighbors = Neighbors();
-            
         }
+
         float getMass() {
             return mass;
         }
@@ -135,20 +187,21 @@ class FluidCell {
                 }
             }
         }
-        void addVelocity(VelocityVector vel2) {
-            vel = vel + vel2;
-        }
+        // void addVelocity(VelocityVector vel2) {
+        //     vel = vel + vel2;
+        // }
         void setVelocity(VelocityVector vel2) {
-            vel = vel2;
+            velocity = vel2;
+            vBounds.setVelocity(vel2);
         }
         VelocityVector getVelocity() {
-            return vel;
+            return velocity;
         }
 
-        void solveVelocity() {
-            // pressure difference first
+        // void solveVelocity() {
+        //     // pressure difference first
             
-        }
+        // }
 
         char isActive() {
             char b, t, l, r = 0;
@@ -175,7 +228,8 @@ class FluidCell {
     private:
         float mass, size, density, temperature, pressure, width, height;
         int row, col;
-        VelocityVector vel;
+        VelocityVector velocity;
+        VelocityBox vBounds;
         Neighbors neighbors;
 };
 
@@ -185,15 +239,26 @@ class FluidGrid {
             int i, j;
             cells = rows * cols;
             grid = (FluidCell **) malloc(sizeof(FluidCell*)*r);
-            
+            newGrid = (FluidCell **) malloc(sizeof(FluidCell*)*r);
+            // vGrid = (VelocityGrid *) malloc(sizeof(VelocityGrid));
+            // vGrid[0] = VelocityGrid(r, c);
             cellWidth = width / c;
             cellHeight = height / r;
+            maxV = 0;
             for (i = 0; i < rows; i++) {
                 grid[i] = (FluidCell *) malloc(sizeof(FluidCell)*c);
+                newGrid[i] = (FluidCell *) malloc(sizeof(FluidCell)*c);
                 for (j = 0; j < cols; j++) {
                     //random mass for now
                     float mass = std::rand() % 256;
                     grid[i][j] = FluidCell(mass, cellWidth, cellHeight, 100);
+                    if (i == rows/2 && j == 0) {
+                        // grid[i][j] = FluidCell(100, cellWidth, cellHeight, 100);
+                        grid[i][j].setVelocity(VelocityVector(20,0));
+                    } 
+                    // else {
+                    //     grid[i][j] = FluidCell(0, cellWidth, cellHeight, 100);
+                    // }
                     if (i != 0) {
                         grid[i][j].setTop(&grid[i - 1][j]);
                         grid[i - 1][j].setBottom(&grid[i][j]);
@@ -202,12 +267,18 @@ class FluidGrid {
                         grid[i][j].setLeft(&grid[i][j - 1]);
                         grid[i][j - 1].setRight(&grid[i][j]);
                     }
-                    if (grid[i][j].isActive()) {
-                        activeCells.push_back(&grid[i][j]);
+                    // if (grid[i][j].isActive()) {
+                    //     activeCells.push_back(&grid[i][j]);
+                    // }
+                    if (grid[i][j].getVelocity().getMag() > maxV) {
+                        maxV = grid[i][j].getVelocity().getMag();
                     }
                     grid[i][j].setLoc(i, j);
+                    newGrid[i][j] = grid[i][j];
                 }
             }
+            dt = 0.02;
+            // 0.7/maxV;
             nActive = activeCells.size();
         }
 
@@ -221,6 +292,34 @@ class FluidGrid {
                 free(grid[i]);
             }
             free(grid);
+        }
+
+        void advect() {
+            int i, j;
+            for (i = 0; i < rows; i++) {
+                for (j = 0; j < cols; j++) {
+                    
+                    FluidCell cell = *getCell(i,j);
+                    VelocityVector v = cell.getVelocity();
+                    float physX = cellWidth*j+cellWidth/2;
+                    float physY = cellHeight*i+cellHeight/2;
+                    float prevX = physX - dt*v.getVx();
+                    float prevY = physY - dt*v.getVy();
+                    // printf("%f ", prevX);
+                    // std::cout << physX << " ";
+                    if ((prevX < 0) || (prevY < 0) || (prevX > width) || (prevY > height)) {
+                        newGrid[i][j].setMass(0);
+                    } else {
+                        int prev_i = prevY / cellHeight;
+                        int prev_j = prevX / cellWidth;
+                        // printf("%f; %f, %f: %d, %d\n", cell.getMass(), prevX, prevY, prev_j, prev_i);
+                        
+                        newGrid[i][j].setMass(grid[prev_i][prev_j].getMass());
+                        //  = grid[prev_i][prev_j];
+                        // newGrid[i][j].setLoc(i,j);
+                    }
+                }
+            }
         }
 
         void update(SDL_Event event) {
@@ -259,16 +358,19 @@ class FluidGrid {
                 
             // }
             nActive = activeCells.size();
-            for (i = 0; i < rows; i++) {
-                for (j = 0; j < cols; j++) {
-                    //random mass for now
-                    FluidCell *cell = getCell(i, j);
-                    // cell->transferMass(cell->getRight(), 5);
-                    cell->transferMass(cell->getBottom(), 5);
-                    totalMass += cell->getMass();
-                    // cell->setMass(cell->getMass()-5);
-                }
-            }
+            grid = newGrid;
+            advect();
+            // printf("%f\n", maxV);
+            // for (i = 0; i < rows; i++) {
+            //     for (j = 0; j < cols; j++) {
+            //         //random mass for now
+            //         FluidCell *cell = getCell(i, j);
+            //         // cell->transferMass(cell->getRight(), 5);
+            //         cell->transferMass(cell->getBottom(), 5);
+            //         totalMass += cell->getMass();
+            //         // cell->setMass(cell->getMass()-5);
+            //     }
+            // }
         }
 
         std::vector<FluidCell*> getActive() {
@@ -278,10 +380,13 @@ class FluidGrid {
     private:
         float width, height;
         float cellWidth, cellHeight;
+        float dt, maxV;
         int rows, cols, cells;
         FluidCell **grid;
+        FluidCell **newGrid;
         std::vector<FluidCell*> activeCells;
-        
+        // VelocityGrid *vGrid;
+        // VelocityGrid *new_vGrid;
 };
 
 class Simulator {
@@ -292,7 +397,7 @@ class Simulator {
             SCALE_W = width / consts::GRID_WIDTH;
             cells = rows * cols;
             grid = (FluidGrid *) malloc(sizeof(FluidGrid));
-            grid[0] = FluidGrid(consts::GRID_WIDTH, consts::GRID_HEIGHT, rows, cols);
+            grid[0] = FluidGrid(width, height, rows, cols);
             
             SDL_Init(SDL_INIT_VIDEO);       // Initializing SDL as Video
             SDL_CreateWindowAndRenderer(consts::GRID_WIDTH, consts::GRID_HEIGHT, 0, &window, &renderer);
@@ -370,11 +475,13 @@ int main(int argv, char **argc) {
     else std::srand((unsigned) std::time(NULL));
     Simulator sim(atoi(argc[1]), atoi(argc[2]), atoi(argc[3]), atoi(argc[4]));
     sim.drawCells();
+    SDL_Event event;
+    // 
+    // sim.step(event);
     // sim.drawGridLines();
 
-    SDL_Event event;
     while(!(event.type == SDL_QUIT)){
-        SDL_Delay(10);  // setting some Delay
+        SDL_Delay(20);  // setting some Delay
         sim.step(event);
         SDL_PollEvent(&event);  // Catching the poll event.
     }

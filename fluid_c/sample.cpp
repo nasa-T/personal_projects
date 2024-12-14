@@ -56,15 +56,15 @@ class Test {
 };
 
 
-// int main(int argc, char* argv[]) {
-//     Test sim(800, 800);
-//     // sim.draw_grid();
-//     SDL_Event event;
+int main(int argc, char* argv[]) {
+    Test sim(800, 800);
+    // sim.draw_grid();
+    SDL_Event event;
 
-//     while(!(event.type == SDL_QUIT)){
-//         SDL_Delay(10);  // setting some Delay
-//         SDL_PollEvent(&event);  // Catching the poll event.
-//     }
+    while(!(event.type == SDL_QUIT)){
+        SDL_Delay(10);  // setting some Delay
+        SDL_PollEvent(&event);  // Catching the poll event.
+    }
     
-//     return 0;
-// }
+    return 0;
+}

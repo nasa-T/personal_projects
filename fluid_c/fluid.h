@@ -11,6 +11,7 @@ namespace consts {
     const float kb = 1.380649e-23;
     const float Na = 6.02214076e23;
     const float R = kb*Na;
+    const float Hmol = 1000;
 
     const double EARTH_ORBIT = 1.5e11;
     const double EARTH_MASS = 6e24;
@@ -39,6 +40,10 @@ namespace consts {
 const uint MASS = 0;
 const uint TEMPERATURE = 1;
 const uint PRESSURE = 2;
+const uint SMOKEMASS = 3;
+const uint R = 4;
+const uint G = 5;
+const uint B = 6;
 // mouse modes
 const uint SMOKE = 0;
 const uint VELOCITY = 1;
@@ -63,7 +68,7 @@ class FluidCell;
 class Source;
 class FluidGrid {
     public:
-        FluidGrid(float width, float height, int r, int c);
+        FluidGrid(float width, float height, int r, int c, float dt);
 
         FluidCell *getCell(int i, int j);
 
@@ -71,13 +76,23 @@ class FluidGrid {
 
         std::map<uint, float> sampleCellAtPoint(float x, float y);
 
-        void projection(int iters);
+        void force(int i, int j, float fx, float fy);
+
+        void diffuse(int iters);
+
+        std::map<char, float> getxyFromij(int i, int j);
+
+        void projection(int iters, bool compressible);
 
         void advect();
 
         void update(SDL_Event event);
 
         std::vector<FluidCell*> getActive();
+
+        float getdt() {
+            return dt;
+        }
         unsigned int nActive;
         VelocityGrid *vGrid;
         // if 0, mouse left click adds mass; if 1, mouse left click dragging
@@ -87,6 +102,11 @@ class FluidGrid {
         int buttonHeld = 0;
         Sint32 prevMouseX = 0;
         Sint32 prevMouseY = 0;
+        // so that simulator can display the pressure if this is 1
+        uint pressureDisplay = 1; 
+        uint temperatureDisplay = 0;
+        uint densityDisplay = 0;
+        uint gravityFlag = 0;
     private:
         float width, height;
         float cellWidth, cellHeight;
@@ -96,10 +116,11 @@ class FluidGrid {
         FluidCell **newGrid;
         std::vector<FluidCell*> activeCells;
         float SCALE_H, SCALE_W;
-        
+        std::vector<uint> color = {1,1,0};
         VelocityGrid *new_vGrid;
         Source *sourceArray;
         std::vector<Source*> sourceList;
+        float viscosity = 0;
 };
   
   class Simulator;
